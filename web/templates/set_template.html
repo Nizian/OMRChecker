@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurar Respuestas</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .answer-option input[type="radio"] {
+            display: none;
+        }
+        
+        .answer-option label {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            line-height: 36px;
+            margin: 0 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .answer-option input[type="radio"]:checked + label {
+            background-color: #0d6efd;
+            color: white;
+            border-color: #0d6efd;
+        }
+        
+        .question-card {
+            transition: all 0.3s;
+        }
+        
+        .question-card:hover {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+
+        .breadcrumb-item + .breadcrumb-item::before {
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            content: "\f054";
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <!-- Navegación -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/" class="text-decoration-none">
+                        <i class="fas fa-home me-1"></i>Inicio
+                    </a>
+                </li>
+                <li class="breadcrumb-item active">Configurar Respuestas - {{ evaluation }}</li>
+            </ol>
+        </nav>
+
+        <!-- Encabezado -->
+        <div class="row mb-4">
+            <div class="col">
+                <h1 class="display-5">
+                    <i class="fas fa-cog text-primary me-2"></i>
+                    Configurar Respuestas
+                </h1>
+                <p class="lead text-muted">
+                    {% if current_answers %}
+                    Modificar respuestas para la evaluación "{{ evaluation }}"
+                    {% else %}
+                    Configurar respuestas para la evaluación "{{ evaluation }}"
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <!-- Estado actual de las respuestas -->
+        {% if current_answers %}
+        <div class="row mb-4">
+            <div class="col">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Actualmente hay {{ current_answers|length }} preguntas configuradas
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Formulario Principal -->
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <form method="POST" id="answersForm" class="needs-validation" novalidate>
+                            <!-- Selector de número de preguntas -->
+                            <div class="mb-4">
+                                <label for="numQuestions" class="form-label">
+                                    <i class="fas fa-list-ol me-2"></i>
+                                    Número de Preguntas
+                                </label>
+                                <div class="input-group">
+                                    <input type="number" 
+                                           class="form-control form-control-lg" 
+                                           id="numQuestions" 
+                                           name="numQuestions" 
+                                           min="1" 
+                                           max="100"
+                                           required>
+                                    <button class="btn btn-outline-primary" type="button" onclick="generateQuestions()">
+                                        <i class="fas fa-sync-alt me-2"></i>
+                                        Generar
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Contenedor de preguntas -->
+                            <div id="questionsContainer" class="mb-4"></div>
+
+                            <!-- Botones de acción -->
+                            <div class="d-flex justify-content-between align-items-center">
+                                <a href="/" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>
+                                    Volver
+                                </a>
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-save me-2"></i>
+                                    Guardar Respuestas
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel lateral -->
+            <div class="col-md-4">
+                <!-- Guía rápida -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-lightbulb text-warning me-2"></i>
+                            Guía Rápida
+                        </h5>
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Ingresa el número total de preguntas
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Selecciona la respuesta correcta para cada pregunta
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Guarda los cambios para finalizar
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Resumen -->
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-info-circle text-primary me-2"></i>
+                            Resumen
+                        </h5>
+                        <p class="card-text" id="summary">
+                            Configura las preguntas para comenzar.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template para preguntas -->
+    <template id="questionTemplate">
+        <div class="question-card card mb-3">
+            <div class="card-body">
+                <h6 class="card-title d-flex align-items-center">
+                    <i class="fas fa-question-circle text-primary me-2"></i>
+                    Pregunta <span class="question-number ms-1"></span>
+                </h6>
+                <div class="answer-options d-flex justify-content-center mt-3">
+                    <div class="answer-option">
+                        <input type="radio" id="q{n}A" name="q{n}" value="A" required>
+                        <label for="q{n}A">A</label>
+                    </div>
+                    <div class="answer-option">
+                        <input type="radio" id="q{n}B" name="q{n}" value="B" required>
+                        <label for="q{n}B">B</label>
+                    </div>
+                    <div class="answer-option">
+                        <input type="radio" id="q{n}C" name="q{n}" value="C" required>
+                        <label for="q{n}C">C</label>
+                    </div>
+                    <div class="answer-option">
+                        <input type="radio" id="q{n}D" name="q{n}" value="D" required>
+                        <label for="q{n}D">D</label>
+                    </div>
+                    <div class="answer-option">
+                        <input type="radio" id="q{n}E" name="q{n}" value="E" required>
+                        <label for="q{n}E">E</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function generateQuestions() {
+            const numQuestions = document.getElementById('numQuestions').value;
+            const container = document.getElementById('questionsContainer');
+            const template = document.getElementById('questionTemplate').content;
+            
+            container.innerHTML = '';
+            
+            for (let i = 1; i <= numQuestions; i++) {
+                const clone = template.cloneNode(true);
+                clone.querySelector('.question-number').textContent = i;
+                
+                // Reemplazar {n} con el número actual
+                const html = clone.querySelector('.card-body').innerHTML.replace(/{n}/g, i);
+                clone.querySelector('.card-body').innerHTML = html;
+                
+                container.appendChild(clone);
+            }
+            
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const numQuestions = document.getElementById('numQuestions').value;
+            const summary = document.getElementById('summary');
+            
+            if (numQuestions > 0) {
+                summary.innerHTML = `
+                    <ul class="list-unstyled mb-0">
+                        <li><strong>Total de preguntas:</strong> ${numQuestions}</li>
+                        <li><strong>Preguntas pendientes:</strong> ${numQuestions}</li>
+                    </ul>
+                `;
+            } else {
+                summary.textContent = 'Configura las preguntas para comenzar.';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('answersForm');
+            
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            });
+        });
+    </script>
+</body>
+</html>

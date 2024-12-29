@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados de la Evaluación</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .breadcrumb-item + .breadcrumb-item::before {
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            content: "\f054";
+            font-size: 12px;
+        }
+        
+        .stats-card {
+            transition: transform 0.3s;
+            border-left: 4px solid;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stats-card.correct {
+            border-left-color: #198754;
+        }
+        
+        .stats-card.incorrect {
+            border-left-color: #dc3545;
+        }
+        
+        .stats-card.total {
+            border-left-color: #0d6efd;
+        }
+
+        .results-table th {
+            background-color: #f8f9fa;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .results-container {
+            max-height: 600px;
+            overflow-y: auto;
+            margin-bottom: 2rem;
+        }
+
+        .correct-answer {
+            background-color: #d1e7dd !important;
+        }
+
+        .incorrect-answer {
+            background-color: #f8d7da !important;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <!-- Navegación -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/" class="text-decoration-none">
+                        <i class="fas fa-home me-1"></i>Inicio
+                    </a>
+                </li>
+                <li class="breadcrumb-item">{{ current_evaluation }}</li>
+                <li class="breadcrumb-item active">Resultados</li>
+            </ol>
+        </nav>
+
+        <!-- Encabezado -->
+        <div class="row mb-4">
+            <div class="col">
+                <h1 class="display-5">
+                    <i class="fas fa-chart-bar text-primary me-2"></i>
+                    Resultados de la Evaluación
+                </h1>
+                <p class="lead text-muted">
+                    Evaluación: {{ current_evaluation }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Tarjetas de Resumen -->
+        <div class="row mb-4 g-3">
+            <div class="col-md-4">
+                <div class="card stats-card correct h-100">
+                    <div class="card-body">
+                        <h5 class="card-title text-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Respuestas Correctas
+                        </h5>
+                        <div class="display-6" id="avgCorrect">-</div>
+                        <p class="text-muted mb-0">Promedio por estudiante</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stats-card incorrect h-100">
+                    <div class="card-body">
+                        <h5 class="card-title text-danger">
+                            <i class="fas fa-times-circle me-2"></i>
+                            Respuestas Incorrectas
+                        </h5>
+                        <div class="display-6" id="avgIncorrect">-</div>
+                        <p class="text-muted mb-0">Promedio por estudiante</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stats-card total h-100">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">
+                            <i class="fas fa-tasks me-2"></i>
+                            Total de Preguntas
+                        </h5>
+                        <div class="display-6" id="totalQuestions">-</div>
+                        <p class="text-muted mb-0">Por evaluación</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Resultados -->
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title mb-4">
+                    <i class="fas fa-list-alt me-2"></i>
+                    Detalle de Resultados
+                </h5>
+                <div class="results-container">
+                    {{ table | safe }}
+                </div>
+                
+                
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <a href="/" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Volver a la página principal
+                    </a>
+                    <a href="/web/results/{{ current_evaluation }}/{{ excel_file }}" class="btn btn-success">
+                        <i class="fas fa-file-excel me-2"></i>
+                        Descargar Excel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Procesar la tabla para resaltar respuestas correctas/incorrectas
+            const table = document.querySelector('table');
+            if (table) {
+                table.classList.add('table', 'table-bordered', 'table-hover', 'results-table');
+                
+                // Calcular promedios y totales
+                const rows = table.querySelectorAll('tbody tr');
+                let totalCorrect = 0;
+                let totalIncorrect = 0;
+                const totalStudents = rows.length;
+                let questionsTotal = 0;
+
+                rows.forEach(row => {
+                    const correct = parseInt(row.cells[1].textContent);
+                    const incorrect = parseInt(row.cells[2].textContent);
+                    totalCorrect += correct;
+                    totalIncorrect += incorrect;
+                    questionsTotal = correct + incorrect; // Tomamos el total de la primera fila
+                });
+
+                // Actualizar las tarjetas de resumen
+                document.getElementById('avgCorrect').textContent = 
+                    (totalCorrect / totalStudents).toFixed(1);
+                document.getElementById('avgIncorrect').textContent = 
+                    (totalIncorrect / totalStudents).toFixed(1);
+                document.getElementById('totalQuestions').textContent = 
+                    questionsTotal;
+            }
+        });
+    </script>
+</body>
+</html>

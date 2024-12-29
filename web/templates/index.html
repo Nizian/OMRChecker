@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Corrección de Evaluaciones</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome para iconos -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .evaluation-card {
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        .evaluation-card:hover {
+            transform: translateY(-5px);
+        }
+        .step-number {
+            width: 30px;
+            height: 30px;
+            background-color: #0d6efd;
+            color: white;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <!-- Encabezado -->
+        <div class="row mb-5">
+            <div class="col">
+                <h1 class="display-4 mb-3">
+                    <i class="fas fa-file-alt text-primary"></i>
+                    Sistema de Corrección de Evaluaciones
+                </h1>
+                <p class="lead text-muted">Gestiona y corrige evaluaciones de forma eficiente y automatizada.</p>
+            </div>
+        </div>
+
+        <!-- Sección de Evaluaciones -->
+        <div class="row mb-4">
+            <div class="col">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-folder-open me-2"></i>Mis Evaluaciones</h2>
+                    <a href="/create_evaluation" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Nueva Evaluación
+                    </a>
+                </div>
+
+                {% if evaluations %}
+                <div class="row row-cols-1 row-cols-md-3 g-4">
+                    {% for evaluation in evaluations %}
+                    <div class="col">
+                        <div class="card h-100 evaluation-card {% if evaluation.name == current_evaluation %}border-primary{% endif %}">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="fas fa-file-alt me-2 text-primary"></i>
+                                    {{ evaluation.name }}
+                                </h5>
+                                
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar me-1"></i>
+                                        Creada el {{ evaluation.created_at|datetime }}
+                                    </small>
+                                </p>
+
+                                {% if evaluation.name == current_evaluation and current_answers %}
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        <i class="fas fa-check-circle me-1"></i>
+                                        {{ current_answers|length }} preguntas configuradas
+                                    </small>
+                                </p>
+                                {% endif %}
+
+                                <!-- En el div de la tarjeta de evaluación -->
+                                <div class="mt-3">
+                                    <a href="/set_template?evaluation={{ evaluation.name }}" class="btn btn-outline-primary btn-sm me-2">
+                                        <i class="fas fa-cog me-1"></i>
+                                        Configurar
+                                    </a>
+                                    <button type="button" class="btn btn-outline-success btn-sm me-2" onclick="document.getElementById('upload-form-{{ evaluation.name }}').click()">
+                                        <i class="fas fa-upload me-1"></i>
+                                        Subir Archivo
+                                    </button>
+                                    {% if os.path.exists(os.path.join(UPLOAD_FOLDER, evaluation.name, 'results', evaluation.name + '_results.json')) %}
+                                    <a href="/view_results/{{ evaluation.name }}" class="btn btn-outline-info btn-sm">
+                                        <i class="fas fa-chart-bar me-1"></i>
+                                        Ver Resultados
+                                    </a>
+                                    {% endif %}
+                                
+                                    <form action="/delete_evaluation" method="post">
+                                        <input type="hidden" name="evaluation_name" value="{{ evaluation.name }}">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                                            <i class="fas fa-trash me-1"></i>
+                                            Eliminar
+                                        </button>
+                                    </form>
+                                
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Formulario oculto para subir archivos -->
+                        <form id="form-{{ evaluation.name }}" action="/upload" method="POST" enctype="multipart/form-data" class="d-none">
+                            <input type="hidden" name="evaluation" value="{{ evaluation.name }}">
+                            <input type="file" id="upload-form-{{ evaluation.name }}" name="file" 
+                                   onchange="document.getElementById('form-{{ evaluation.name }}').submit()"
+                                   accept=".pdf,.png,.jpg,.jpeg">
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <!-- Estado vacío -->
+                <div class="empty-state">
+                    <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
+                    <h3>No hay evaluaciones creadas</h3>
+                    <p class="text-muted">Comienza creando tu primera evaluación</p>
+                    <a href="/create_evaluation" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>
+                        Crear Evaluación
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Guía de Uso -->
+        <div class="row mt-5">
+            <div class="col">
+                <h3 class="mb-4">Guía Rápida</h3>
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="d-flex align-items-center">
+                                    <span class="step-number">1</span>
+                                    <div>
+                                        <h5 class="mb-1">Crear Evaluación</h5>
+                                        <p class="text-muted small mb-0">Crea una nueva evaluación para comenzar</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="d-flex align-items-center">
+                                    <span class="step-number">2</span>
+                                    <div>
+                                        <h5 class="mb-1">Configurar Respuestas</h5>
+                                        <p class="text-muted small mb-0">Define las respuestas correctas</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="d-flex align-items-center">
+                                    <span class="step-number">3</span>
+                                    <div>
+                                        <h5 class="mb-1">Subir Archivos</h5>
+                                        <p class="text-muted small mb-0">Sube las evaluaciones a corregir (PDF o imágenes)</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

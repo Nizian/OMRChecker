@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Nueva Evaluación</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .form-floating > label {
+            padding-left: 24px;
+        }
+        .validation-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: none;
+        }
+        .breadcrumb-item + .breadcrumb-item::before {
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            content: "\f054";
+            font-size: 12px;
+        }
+        .help-tip {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .help-tip ul {
+            padding-left: 20px;
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <!-- Navegación -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/" class="text-decoration-none">
+                        <i class="fas fa-home me-1"></i>Inicio
+                    </a>
+                </li>
+                <li class="breadcrumb-item active">Nueva Evaluación</li>
+            </ol>
+        </nav>
+
+        <!-- Encabezado -->
+        <div class="row mb-4">
+            <div class="col">
+                <h1 class="display-5">
+                    <i class="fas fa-plus-circle text-primary me-2"></i>
+                    Crear Nueva Evaluación
+                </h1>
+                <p class="lead text-muted">
+                    Configure los detalles básicos de su nueva evaluación
+                </p>
+            </div>
+        </div>
+
+        <!-- Formulario Principal -->
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card shadow-sm">
+                    <div class="card-body p-4">
+                        <form id="evaluationForm" method="POST" action="/create_evaluation" class="needs-validation" novalidate>
+                            <div class="form-floating mb-4 position-relative">
+                                <input type="text" 
+                                       class="form-control form-control-lg" 
+                                       id="evaluationName" 
+                                       name="evaluationName" 
+                                       placeholder="Nombre de la evaluación"
+                                       required
+                                       pattern="^[a-zA-Z0-9-_]+$"
+                                       minlength="3"
+                                       maxlength="50">
+                                <label for="evaluationName">
+                                    <i class="fas fa-file-alt me-2"></i>
+                                    Nombre de la Evaluación
+                                </label>
+                                <i class="fas fa-check text-success validation-icon"></i>
+                                <div class="invalid-feedback">
+                                    El nombre debe contener solo letras, números, guiones y guiones bajos (3-50 caracteres)
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <a href="/" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>
+                                    Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-save me-2"></i>
+                                    Crear Evaluación
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel de Ayuda -->
+            <div class="col-md-4">
+                <div class="help-tip">
+                    <h5 class="mb-3">
+                        <i class="fas fa-info-circle text-primary me-2"></i>
+                        Consejos útiles
+                    </h5>
+                    <ul class="text-muted">
+                        <li>Use nombres descriptivos y cortos</li>
+                        <li>Evite espacios y caracteres especiales</li>
+                        <li>Ejemplos válidos:
+                            <ul>
+                                <li>prueba_matematicas</li>
+                                <li>fisica-2023</li>
+                                <li>evaluacion1</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Validación personalizada -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('evaluationForm');
+            const input = document.getElementById('evaluationName');
+            const validationIcon = document.querySelector('.validation-icon');
+
+            input.addEventListener('input', function() {
+                if (this.checkValidity()) {
+                    validationIcon.style.display = 'block';
+                } else {
+                    validationIcon.style.display = 'none';
+                }
+            });
+
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            });
+        });
+    </script>
+</body>
+</html>
